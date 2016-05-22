@@ -1,0 +1,18 @@
+prefix=/tmp/fontconfig/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+sysconfdir=/tmp/fontconfig/etc
+localstatedir=${prefix}/var
+PACKAGE=fontconfig
+confdir=${sysconfdir}/fonts
+cachedir=${localstatedir}/cache/${PACKAGE}
+
+Name: Fontconfig
+Description: Font configuration and customization library
+Version: 2.11.95
+Requires:  freetype2
+Requires.private:  libxml-2.0
+Libs: -L${libdir} -lfontconfig
+Libs.private:  -lfreetype    -lxml2  
+Cflags: -I${includedir}  -I/usr/include/freetype2    -I/usr/include/libxml2  

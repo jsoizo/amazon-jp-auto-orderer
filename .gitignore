@@ -1,0 +1,6 @@
+node_modules
+.env
+deploy.env
+event.json
+fontconfig/usr/var/cache/*
+fontconfig/usr/share/fonts/*

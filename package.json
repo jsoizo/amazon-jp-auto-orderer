@@ -1,0 +1,19 @@
+{
+  "name": "amazon_jp_auto_order",
+  "version": "0.1.0",
+  "description": "Automatically buy something at amazon.co.jp",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jun Sakamoto",
+  "license": "ISC",
+  "dependencies": {
+    "ifx": "^1.0.4",
+    "request": "^2.72.0"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.3.14",
+    "phantomjs-prebuilt": "^2.1.7"
+  }
+}
