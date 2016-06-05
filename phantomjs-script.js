@@ -1,14 +1,14 @@
 var system = require('system'),
     args = system.args;
 
-function exitWithErrorMsg(message) {
-  system.stderr.write(message);
+function exitWithErrorMessage(message) {
+  console.error(message);
   phantom.exit();
 }
 
 // validate arguments
 if (args.length !== 5) {
-  exitWithErrorMsg("Try to pass some arguments when invoking this script!'");
+  exitWithErrorMessage("Try to pass some arguments when invoking this script!'");
 }
 
 var email = args[1],
@@ -64,7 +64,7 @@ var steps = [
   function() {
     console.log("### Confirm Payment ###");
     page.evaluate(function(){
-      document.getElementById("spc-form").submit();
+      document.getElementsByName("placeYourOrder1")[0].click();
     })
   },
   function() {
@@ -84,15 +84,15 @@ page.onLoadFinished = function(status) {
   loadInProgress = false;
   console.log("load finished: " + status);
   if (status !== "success") {
-    exitWithErrorMsg("Page Open Error!\npage: "+currentUrl);
+    exitWithErrorMessage("Page Open Error!\npage: "+currentUrl);
   }
 };
 
-page.onConsoleMessage = function(msg) {
+page.onConsoleMessage = function(message) {
   console.log(message);
 };
 
-interval = setInterval(executeRequestsStepByStep, 500);
+interval = setInterval(executeRequestsStepByStep, 100);
 function executeRequestsStepByStep(){
   if (loadInProgress == false && typeof steps[stepIndex] == "function") {
       console.log("step " + (stepIndex + 1));
