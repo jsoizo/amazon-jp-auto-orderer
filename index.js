@@ -1,12 +1,12 @@
-var path = require('path'),
-    fs = require('fs'),
-    http = require('http'),
-    request = require('request'),
-    childProcess = require('child_process'),
-    aws = require('aws-sdk'),
-    If = require('ifx');
+const path = require('path'),
+      fs = require('fs'),
+      http = require('http'),
+      request = require('request'),
+      childProcess = require('child_process'),
+      aws = require('aws-sdk'),
+      If = require('ifx');
 
-var mode = process.env['MODE'],
+const mode = process.env['MODE'],
       amazonEmail = process.env['AMAZON_JP_EMAIL'],
       amazonPass = process.env['AMAZON_JP_PASSWORD'],
       amazonItemUrl = process.env['AMAZON_JP_ITEM_URL'],
@@ -14,16 +14,14 @@ var mode = process.env['MODE'],
       captureBucket = process.env['CAPTURE_BUCKET'];
 
 // Call the phantomjs script
-function callPhantom(callback) {
-  var phantomJsPath = If (mode === 'production')(function(){
+const callPhantom = (callback) => {
+  const phantomJsPath = If (mode === 'production')(() => {
     return path.join(__dirname, 'phantomjs')
-  }).Else( function() {
+  }).Else(() => {
     return path.join(__dirname, 'node_modules', 'phantomjs-prebuilt', 'bin', 'phantomjs')
   });
 
-  var errorMessage = "";
-
-  var childArgs = [
+  const childArgs = [
     path.join(__dirname, 'phantomjs-script.js'),
     amazonEmail,
     amazonPass,
@@ -36,60 +34,57 @@ function callPhantom(callback) {
   process.env['LD_WARN'] = 'true';
 
   console.log('Calling phantom: ', phantomJsPath);
-  var phantomExecution = childProcess.execFile(phantomJsPath, childArgs);
+  const phantomExecution = childProcess.execFile(phantomJsPath, childArgs);
 
   phantomExecution.stdout.on('data', function (data) {
-    console.log(data);
+    console.log('[phantom info] ' + data);
   });
 
   phantomExecution.stderr.on('data', function (data) {
-    console.log('phantom error  ---:> ' + data);
-    errorMessage = errorMessage + data + "\n";
+    console.log('[phantom error] ' + data);
   });
 
   phantomExecution.on('exit', function (code) {
     console.log('child process exited with code ' + code);
-    callback(code, errorMessage);
+    callback(code);
   });
 }
 
 // Entry Point
-exports.handler = function( event, context ) {
+exports.handler = (event, context, callback) => {
 
-  function main(error) {
-    if (error) {
-      throw error;
-      context.done();
-    }
-
+  const main = () => {
     // Execute the phantom call and exit
-    callPhantom(function(code, errorMessage) {
-      var message = If(errorMessage.length > 0)(function(){
-        return "Fail!!! \n" + errorMessage;
-      }).Else(function(){
-        return "Success!!!";
-      });
+    callPhantom((code) => {
+      const message = If(code !== 0)(() => "Fail!!!").Else(() => "Success!!!");
 
-      var s3bucket = new aws.S3({params: {Bucket: captureBucket}});
-      var params = {
+      const s3bucket = new aws.S3({params: {Bucket: captureBucket}});
+      const params = {
         Key : "one_click_order/" + new Date().getTime() + ".png",
         Body : fs.readFileSync(captureImagePath)
-      }
-      s3bucket.upload(params, function(err, data) {
+      };
+      s3bucket.upload(params, (err, data) => {
         if (err) {
           console.log(err);
-          context.done();
         } else {
           console.log("successfully upload to s3")
-          context.done();
         }
-      })
+        callback();
+      });
     });
   }
 
   if (mode === 'production') {
     process.env['LD_LIBRARY_PATH'] = '/tmp/fontconfig/usr/lib/';
-    childProcess.exec('cp -r fontconfig /tmp; /tmp/fontconfig/usr/bin/fc-cache -fs', main);
+    const fontConfigCacheCmd = 'cp -r fontconfig /tmp; /tmp/fontconfig/usr/bin/fc-cache -fs';
+    childProcess.exec(fontConfigCacheCmd, (error) => {
+      if (error) {
+        throw error;
+        callback();
+      } else {
+        main();
+      }
+    });
   } else {
     main();
   }
